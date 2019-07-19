@@ -61,7 +61,7 @@ const bird = {
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation);
-        ctx.drawImage(sprite, fly.sX, fly.sY, this.w, this.h, this.x - this.w/2, this.y - this.h/2, this.w, this.h);
+        ctx.drawImage(sprite, fly.sX, fly.sY, this.w, this.h, - this.w/2, - this.h/2, this.w, this.h);
         ctx.restore();
     },
     flap: function() {
