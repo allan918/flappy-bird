@@ -32,9 +32,16 @@ const background = {
     h: 226,
     x: 0,
     y: canvas.height - 226,
+    dx:2, // speed that is moving each frame
     draw: function() {
         ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
         ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x + this.w, this.y, this.w, this.h);
+    },
+
+    update: function() {
+        if (state.cur == state.game) {
+            this.x = (this.x - this.dx) % (this.w/2)
+        }
     }
 }
 
@@ -54,10 +61,11 @@ const bird = {
     frame: 0,
     speed: 0,
     gravity: 0.25,
-    jump: 4.6,
+    jump: 4.5,
     rotation: 0,
     draw: function() {
         let fly = this.animation[this.frame];
+        // for the rotation of the bird
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation);
@@ -76,14 +84,29 @@ const bird = {
         }
         this.frame = this.frame % this.animation.length;
         if (state.cur == state.begin) {
+            //reset the value to initial
             this.y = 150;
             this.speed = 0;
+            this.rotation = 0;
         } else {
+
+            // prepare the speed and location for next frame
             this.speed = this.speed + this.gravity;
             this.y = this.y + this.speed;
+
+            // when games over
             if (this.y + this.h >= canvas.height - floor.h) {
                 this.y = canvas.height - floor.h - 1/2 * this.h;
                 state.cur = state.end;
+                this.frame = 1;
+            }
+
+
+            if (this.speed >= this.jump) { //falling
+                this.rotation = 90 * DEGREE;
+
+            } else {
+                this.rotation = -25 * DEGREE; // upward
             }
         }
     }
@@ -95,10 +118,16 @@ const floor = {
     w: 224,
     h: 112,
     x: 0,
+    dx: 3,
     y: canvas.height - 112,
     draw: function() {
         ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
         ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x + this.w, this.y, this.w, this.h);
+    },
+    update: function() {
+        if (state.cur == state.game) {
+            this.x = (this.x - this.dx) % (this.w/2)
+        }
     }
 
 }
@@ -131,6 +160,57 @@ const gameOver = {
     }
 }
 
+const pipes = {
+    bottom: {
+        sX: 502,
+        sy: 0,
+    },
+    top : {
+        sx:553,
+        sy:0
+    },
+    w: 53,
+    h: 400,
+    gap: 85,
+    dx: 2,
+    position: [],
+    maxY: -150,
+    draw: function() {
+        for (let i = 0; i < this.position.length; i++) {
+            let pos = this.position[i];
+            let topP = pos.y;
+            let botP = pos.y+ this.h + this.gap;
+
+            ctx.drawImage(sprite, this.bottom.sX, this.bottom.sy, this.w, this.h, pos.x, botP, this.w, this.h);
+            ctx.drawImage(sprite, this.top.sX, this.top.sy, this.w, this.h, pos.x, topP, this.w, this.h);
+        }
+    },
+    update: function() {
+        if (state.cur == state.game) {
+            if (frames % 100 == 0) {
+                // calculate a random start y for the top pipes
+                this.position.push(
+                    {
+                        x: canvas.width,
+                        y: this.maxY * (Math.random + 1)
+                    }
+                )
+            }
+            for (let i = 0; i < this.position.length; i++) {
+                let p = this.position[i];
+                p.x -= this.dx;
+                if (p.x + this.w <= 0) {
+                    this.position.shift;
+
+                }
+            }
+
+            
+        }
+
+    }
+}
+
 function draw() {
     ctx.fillStyle = "#70c5ce";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -139,10 +219,14 @@ function draw() {
     bird.draw();
     ready.draw();
     gameOver.draw();
+    pipes.draw();
 }
 
 function update() {
    bird.update();
+   background.update();
+   floor.update();
+   pipes.update();
 }
 
 function loop() {
