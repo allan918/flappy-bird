@@ -48,6 +48,7 @@ const background = {
 
 // get the bird animation
 const bird = {
+    radius: 12,
     animation: [
         {sX: 276, sY: 112},
         {sX: 276, sY: 139},
@@ -160,6 +161,27 @@ const gameOver = {
     }
 }
 
+const score = {
+    best: parseInt(localStorage.getItem("best")) || 0,
+    value: 0,
+    draw: function() {
+        ctx.fillStyle = "#FFF";
+        ctx.strokeStyle = "#000";
+        if (state.cur == state.game) {
+            ctx.lineWidth = 2;
+            ctx.font = "35px Teko";
+            ctx.fillText(this.value, canvas.width/2, 50);
+            ctx.strokeText(this.value, canvas.width/2, 50);
+        } else if (state.cur == state.end) {
+            ctx.font = "25px Teko"
+            ctx.fillText(this.value, 225, 235);
+            ctx.strokeText(this.value, 225, 235);
+            ctx.fillText(this.value, 225, 277);
+            ctx.strokeText(this.value, 225, 277);
+        }
+    }
+}
+
 const pipes = {
     bottom: {
         sX: 502,
@@ -171,7 +193,7 @@ const pipes = {
     },
     w: 53,
     h: 400,
-    gap: 85,
+    gap: 150,
     dx: 2,
     position: [],
     maxY: -150,
@@ -182,32 +204,49 @@ const pipes = {
             let botP = pos.y+ this.h + this.gap;
 
             ctx.drawImage(sprite, this.bottom.sX, this.bottom.sy, this.w, this.h, pos.x, botP, this.w, this.h);
-            ctx.drawImage(sprite, this.top.sX, this.top.sy, this.w, this.h, pos.x, topP, this.w, this.h);
+            ctx.drawImage(sprite, this.top.sx, this.top.sy, this.w, this.h, pos.x, topP, this.w, this.h);
         }
     },
     update: function() {
-        if (state.cur == state.game) {
-            if (frames % 100 == 0) {
+       // if (state.cur != state.game) return;
+            if (frames % 100 == 0 & (state.cur == state.game)) {
                 // calculate a random start y for the top pipes
                 this.position.push(
                     {
                         x: canvas.width,
-                        y: this.maxY * (Math.random + 1)
+                        y: this.maxY * (Math.random() + 1)
                     }
                 )
+                console.log("aaaaaa");
             }
             for (let i = 0; i < this.position.length; i++) {
                 let p = this.position[i];
                 p.x -= this.dx;
+                //bot Y
+                let bottomPos = p.y + this.h + this.gap;
+                // collision
+                // if in the pip, then fail
+                if (
+                    // touch inside of top pipe, check 4 lines
+                    (bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + this.w && bird.y + bird.radius > p.y
+                    && bird.y - bird.radius < p.y + this.h) 
+                    ||
+                    // touch the bottom pipe
+                    (bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + this.w && bird.y + bird.radius > bottomPos
+                        && bird.y - bird.radius < bottomPos +this.h)
+                    
+                    ) {
+                    state.cur = state.end;
+                    console.log("touched");
+                }
+                //remove the past pipe
                 if (p.x + this.w <= 0) {
-                    this.position.shift;
-
+                    this.position.shift();
                 }
             }
-
-            
-        }
-
+            if (state.cur == state.end) {
+                this.position.length = 0;
+            }
     }
 }
 
@@ -215,11 +254,13 @@ function draw() {
     ctx.fillStyle = "#70c5ce";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     background.draw();
+    pipes.draw();
     floor.draw();
     bird.draw();
     ready.draw();
     gameOver.draw();
-    pipes.draw();
+    score.draw();
+    
 }
 
 function update() {
