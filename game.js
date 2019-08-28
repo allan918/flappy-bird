@@ -236,7 +236,7 @@ const pipes = {
     },
     w: 53,
     h: 400,
-    gap: 85,
+    gap: 90,
     dx: 2,
     position: [],
     maxY: -150,
@@ -277,6 +277,7 @@ const pipes = {
                 // touch the bottom pipe
                 (bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + this.w && bird.y + bird.radius > bottomPos
                     && bird.y - bird.radius < bottomPos + this.h)
+                    || bird.y < 0
 
             ) {
                 state.cur = state.end;
