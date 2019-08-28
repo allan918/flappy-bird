@@ -1,4 +1,5 @@
 #flappy-bird
+
 This game can be accessed through [here](https://xifeiwang.github.io/flappy-bird/).
 This game is implemented by JS and HTML Canvas 5.
 ## How to score
